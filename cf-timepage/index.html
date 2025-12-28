@@ -1,0 +1,40 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>cf-timepage2</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 2rem; }
+    .card { max-width: 28rem; border: 1px solid #ddd; border-radius: 0.5rem; padding: 1.5rem; }
+    .label { color: #555; font-size: 0.9rem; }
+    .value { font-size: 2rem; margin: 0.5rem 0 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Current Time</h1>
+  <div class="card">
+    <div class="label">Time (America/Chicago)</div>
+    <div id="time" class="value">—</div>
+
+    <div class="label">Date</div>
+    <div id="date" class="value">—</div>
+
+    <div class="label">Day</div>
+    <div id="day" class="value">—</div>
+  </div>
+
+  <script>
+    const tz = "America/Chicago";
+    const now = new Date();
+    document.getElementById("time").textContent =
+      new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit", hour12: true }).format(now);
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+    const y = parts.find(p => p.type === "year").value, m = parts.find(p => p.type === "month").value, d = parts.find(p => p.type === "day").value;
+    document.getElementById("date").textContent = `${y}-${m}-${d}`;
+    document.getElementById("day").textContent =
+      new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long" }).format(now);
+  </script>
+</body>
+</html>
