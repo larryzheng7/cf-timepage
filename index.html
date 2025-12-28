@@ -3,17 +3,29 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>cf-timepage2</title>
+  <title>cf-timepage</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 2rem; }
-    .card { max-width: 28rem; border: 1px solid #ddd; border-radius: 0.5rem; padding: 1.5rem; }
-    .label { color: #555; font-size: 0.9rem; }
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      margin: 2rem;
+      line-height: 1.5;
+    }
+    .card {
+      max-width: 32rem;
+      border: 1px solid #ddd;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+    }
+    .label { color: #555; font-size: 0.95rem; }
     .value { font-size: 2rem; margin: 0.5rem 0 1rem; }
+    .small { font-size: 0.85rem; color: #777; }
   </style>
 </head>
 <body>
   <h1>Current Time</h1>
+
   <div class="card">
     <div class="label">Time (America/Chicago)</div>
     <div id="time" class="value">—</div>
@@ -23,18 +35,62 @@
 
     <div class="label">Day</div>
     <div id="day" class="value">—</div>
+
+    <div class="small" id="updated">Last updated: —</div>
   </div>
 
   <script>
-    const tz = "America/Chicago";
-    const now = new Date();
-    document.getElementById("time").textContent =
-      new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit", hour12: true }).format(now);
-    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
-    const y = parts.find(p => p.type === "year").value, m = parts.find(p => p.type === "month").value, d = parts.find(p => p.type === "day").value;
-    document.getElementById("date").textContent = `${y}-${m}-${d}`;
-    document.getElementById("day").textContent =
-      new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long" }).format(now);
+    const TZ_NAME = 'America/Chicago';
+
+    function formatTime(nowUTC = new Date()) {
+      // Example: "9:07" (12-hour, minute 2-digit)
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: TZ_NAME,
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }).format(nowUTC);
+    }
+
+    function formatDate(nowUTC = new Date()) {
+      // YYYY-MM-DD using en-CA parts for zero-padded month/day
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: TZ_NAME,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).formatToParts(nowUTC);
+      const y = parts.find(p => p.type === 'year')?.value ?? '0000';
+      const m = parts.find(p => p.type === 'month')?.value ?? '01';
+      const d = parts.find(p => p.type === 'day')?.value ?? '01';
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatWeekday(nowUTC = new Date()) {
+      // "Monday", "Tuesday", ...
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: TZ_NAME,
+        weekday: 'long',
+      }).format(nowUTC);
+    }
+
+    function update() {
+      const now = new Date();
+      document.getElementById('time').textContent = formatTime(now);
+      document.getElementById('date').textContent = formatDate(now);
+      document.getElementById('day').textContent  = formatWeekday(now);
+      document.getElementById('updated').textContent =
+        `Last updated: ${now.toLocaleString('en-US', { hour12: true })}`;
+    }
+
+    // Initial render + refresh every minute
+    update();
+    setInterval(update, 60_000);
+
+    // Ensure accurate refresh when tab becomes visible again
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) update();
+    });
   </script>
 </body>
 </html>
